@@ -20,8 +20,8 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. إعداد الذكاء الاصطناعي (استخدم مفتاحك هنا)
-genai.configure(api_key="ضع_مفتاحك_هنا")
+# 2. إعداد الذكاء الاصطناعي AIzaSyAcsMKzB2rZC-dPjcSzUFq6WxokPsewUMo
+genai.configure(api_key="AIzaSyAcsMKzB2rZC-dPjcSzUFq6WxokPsewUMo")
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # 3. إدارة البيانات
