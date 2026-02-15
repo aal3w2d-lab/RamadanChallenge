@@ -1,109 +1,111 @@
 import streamlit as st
 import pandas as pd
 import google.generativeai as genai
+import urllib.parse
+from datetime import datetime
 import time
 
-# 1. إعداد الصفحة مع فرض اتجاه النص العربي
-st.set_page_config(page_title="فرسان رمضان", page_icon="🌙", layout="centered")
+# 1. إعدادات الهوية البصرية الملكية
+st.set_page_config(page_title="منظومة فرسان رمضان الرقمية", page_icon="🌙", layout="wide")
 
-# 2. تحسين الواجهة وتثبيت المربعات (CSS المطور)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
     html, body, [class*="st-"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl !important; }
-    
-    /* تثبيت أحجام مربعات النص ومنع التداخل */
-    .stTextInput>div>div>input, .stSelectbox>div {
-        text-align: right; direction: rtl; min-height: 45px; border: 1px solid #d4af37 !important;
+    .main { background: linear-gradient(180deg, #001a11 0%, #002b1b 100%); color: #fdfdfd; }
+    .stButton>button { 
+        background: linear-gradient(90deg, #d4af37 0%, #f9d976 100%); 
+        color: #001a11 !important; border-radius: 20px; font-weight: bold; border: none; width: 100%;
     }
-    
-    /* تصميم البطاقات الموحد */
-    .stExpander { border: 1px solid #d4af37; border-radius: 10px; background-color: rgba(212, 175, 55, 0.05); }
-    
-    /* تنسيق العناوين */
-    h1, h2, h3 { color: #f9d976 !important; margin-bottom: 20px; }
-    
-    /* إخفاء عناصر التداخل في الأندرويد */
-    .stActionButton { display: none; }
+    .card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; border: 1px solid #d4af37; margin-bottom: 20px; }
+    .admin-section { border: 2px solid #ff4b4b; padding: 15px; border-radius: 10px; margin-top: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. الربط مع الذكاء الاصطناعي (تأكد من كتابة المفتاح بدقة)
-# وضعنا 'gemini-1.5-flash' لأنه الأسرع والأكثر استقراراً حالياً
-try:
-    genai.configure(api_key="AIzaSyAcsMKzB2rZC-dPjcSzUFq6WxokPsewUMo")
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    st.error("خطأ في ربط مفتاح الذكاء الاصطناعي")
+# 2. حوكمة البيانات (قاعدة البيانات المؤقتة)
+if 'teams' not in st.session_state:
+    st.session_state.teams = {"فريق الصقور": [], "فرسان مكة": []}
+if 'pending_tasks' not in st.session_state:
+    st.session_state.pending_tasks = []
+if 'final_scores' not in st.session_state:
+    st.session_state.final_scores = {}
 
-st.markdown("<h1 style='text-align: center;'>🌙 منصة فرسان رمضان</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>خطوتك نحو التطوير الإداري والنمو الذاتي</p>", unsafe_allow_html=True)
+# 3. إعداد المساعد الذكي
+genai.configure(api_key="AIzaSyA0cI8HTLo0XRkzAdqV3BfQEAiLnVLARvs")
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 4. المساعد الذكي (المكان المطور)
-with st.expander("🤖 اطلب خطة من المساعد الذكي", expanded=False):
-    st.write("اسأل المساعد ليقترح عليك خطة لمهارة اليوم")
-    user_input = st.text_input("مثلاً: اقترح لي خطة 20 دقيقة لتعلم المونتاج", key="ai_input")
-    if st.button("الحصول على إجابة", key="ai_btn"):
-        if user_input:
-            try:
-                with st.spinner('جاري التفكير...'):
-                    # صياغة الأمر (Prompt) ليكون المساعد دقيقاً
-                    prompt = f"بصفتك خبير تطوير إداري، اقترح خطة عملية ومختصرة جداً في 3 نقاط لـ: {user_input}"
-                    response = model.generate_content(prompt)
-                    st.info(response.text)
-            except Exception as e:
-                st.error("عذراً، المساعد يحتاج لإعادة ضبط المفتاح أو هناك ضغط على الخدمة.")
-        else:
-            st.warning("يرجى كتابة سؤالك أولاً")
+# --- الواجهة الرئيسية ---
+st.markdown("<h1 style='text-align: center;'>⚔️ منظومة فرسان رمضان المتكاملة</h1>", unsafe_allow_html=True)
 
-# 5. تسجيل الإنجاز (مربعات ثابتة)
-st.divider()
-st.subheader("📝 تسجيل إنجاز اليوم")
-name = st.text_input("اسم الفارس", key="user_name")
+# 4. المساعد الذكي وربط القرآن
+with st.expander("🤖 المساعد الذكي ومركز التلاوة"):
+    col_ai1, col_ai2 = st.columns(2)
+    with col_ai1:
+        st.markdown("""<a href="intent://#Intent;scheme=quran;package=com.quran.labs.androidquran;end" target="_blank">
+            <button style="width:100%; padding:10px; background-color:#d4af37; border:none; border-radius:10px; cursor:pointer;">📖 فتح تطبيق القرآن</button>
+            </a>""", unsafe_allow_html=True)
+    with col_ai2:
+        u_query = st.text_input("اسأل المساعد عن خطة أو تفسير")
+        if st.button("استشارة"):
+            res = model.generate_content(f"كخبير تطوير إداري، أجب باختصار: {u_query}")
+            st.info(res.text)
 
-skill = st.selectbox("اختر المهارة", ["هندسة الأوامر AI", "المونتاج", "أخرى"], key="skill_sel")
-if skill == "أخرى":
-    skill = st.text_input("اكتب مهارتك هنا", key="custom_skill")
+# 5. سوق الفرق والتسجيل (الألعاب الجماعية)
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("🏟️ ساحة الفرق الجماعية")
+col_reg1, col_reg2 = st.columns(2)
+with col_reg1:
+    selected_team = st.selectbox("اختر فريقك للمنافسة", list(st.session_state.teams.keys()))
+with col_reg2:
+    player_name = st.text_input("اسمك الكريم")
 
-habit = st.selectbox("اختر العادة", ["العمل العميق", "شرب الماء", "أخرى"], key="habit_sel")
-if habit == "أخرى":
-    habit = st.text_input("اكتب عادتك هنا", key="custom_habit")
+st.markdown("---")
+st.write("📝 **تسجيل الإنجاز (نقطة لكل وحدة)**")
+col_in1, col_in2, col_in3 = st.columns(3)
+with col_in1:
+    category = st.selectbox("النشاط", ["أذكار", "قرآن (وجه)", "أحاديث", "فعل خير"])
+with col_in2:
+    amount = st.number_input("العدد المنجز", min_value=1)
+with col_in3:
+    proof_link = st.text_input("إثبات/ملاحظة (للحوكمة)")
 
-if st.button("✅ حفظ الإنجاز وكسب 20 نقطة"):
-    if name:
-        st.success(f"أحسنت يا {name}! تم الحفظ.")
-        st.balloons()
-    else:
-        st.error("يرجى كتابة الاسم")
-# 6. لوحة الصدارة التلقائية (تظهر في الأسفل دائماً)
-st.divider()
-st.markdown("<h2 style='text-align: center;'>🏆 لوحة صدارة الفرسان</h2>", unsafe_allow_html=True)
+if st.button("🚀 تسجيل وإرسال للتدقيق"):
+    if player_name:
+        task = {
+            "name": player_name, "team": selected_team, 
+            "pts": amount, "cat": category, "proof": proof_link,
+            "status": "معلق"
+        }
+        st.session_state.pending_tasks.append(task)
+        # ربط الواتساب
+        msg = urllib.parse.quote(f"🛡️ إثبات جديد: {player_name}\nالنشاط: {category}\nالعدد: {amount}")
+        st.markdown(f'<a href="https://wa.me/?text={msg}" target="_blank">📲 أرسل الإثبات لمجموعة الواتساب</a>', unsafe_allow_html=True)
+        st.success("تم الإرسال بنجاح.. بانتظار اعتماد القائد.")
+st.markdown("</div>", unsafe_allow_html=True)
 
-# إدارة البيانات في الذاكرة (Session State) لضمان ثبات النقاط أثناء التصفح
-if 'leaderboard_data' not in st.session_state:
-    st.session_state.leaderboard_data = {}
+# 6. لوحة تحكم القائد (Admin Control)
+st.sidebar.markdown("---")
+admin_key = st.sidebar.text_input("قفل الحوكمة 🔐", type="password")
+if admin_key == "1234":
+    st.markdown("<div class='admin-section'>", unsafe_allow_html=True)
+    st.header("🕵️ مركز تدقيق الاستحقاق")
+    for i, t in enumerate(st.session_state.pending_tasks):
+        st.write(f"🚩 {t['name']} ({t['team']}): {t['pts']} نقطة في {t['cat']}")
+        c_app, c_rej = st.columns(2)
+        if c_app.button(f"اعتماد ✅", key=f"a_{i}"):
+            st.session_state.final_scores[t['team']] = st.session_state.final_scores.get(t['team'], 0) + t['pts']
+            st.session_state.pending_tasks.pop(i)
+            st.rerun()
+        if c_rej.button(f"رفض ❌", key=f"r_{i}"):
+            st.session_state.pending_tasks.pop(i)
+            st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# تحديث البيانات عند الضغط على زر الحفظ
-if st.button("تحديث النقاط وعرض الترتيب"):
-    if name:
-        if name in st.session_state.leaderboard_data:
-            st.session_state.leaderboard_data[name] += 20
-        else:
-            st.session_state.leaderboard_data[name] = 20
-        st.success(f"تم تحديث رصيد {name}!")
-    else:
-        st.warning("سجل إنجازك أولاً لتظهر في لوحة الصدارة")
-
-# عرض لوحة الصدارة بشكل أنيق
-if st.session_state.leaderboard_data:
-    sorted_data = dict(sorted(st.session_state.leaderboard_data.items(), key=lambda item: item[1], reverse=True))
-    for i, (knight, score) in enumerate(sorted_data.items()):
-        rank_icon = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "🎖️"
-        st.markdown(f"""
-        <div style='background: rgba(212, 175, 55, 0.1); padding: 10px; border-radius: 10px; border-right: 5px solid #d4af37; margin: 5px 0;'>
-            <span style='font-size: 1.2rem;'>{rank_icon} <b>{knight}</b></span>
-            <span style='float: left; color: #f9d976; font-weight: bold;'>{score} نقطة</span>
-        </div>
-        """, unsafe_allow_html=True)
+# 7. التقارير ولوحة الصدارة الرسمية
+st.header("🏆 لوحة الصدارة المعتمدة")
+if st.session_state.final_scores:
+    score_df = pd.DataFrame(st.session_state.final_scores.items(), columns=["الفريق", "إجمالي النقاط"])
+    st.bar_chart(score_df.set_index("الفريق"))
+    st.table(score_df.sort_values(by="إجمالي النقاط", ascending=False))
 else:
-    st.info("لا توجد بيانات حالياً، كن أول فارس يسجل إنجازه!")
+    st.info("بانتظار اعتماد أولى النقاط من القائد.")
