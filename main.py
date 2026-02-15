@@ -1,87 +1,73 @@
 import streamlit as st
 import pandas as pd
-import urllib.parse
 import google.generativeai as genai
 import time
 from datetime import datetime
 
-# 1. إعدادات الهوية البصرية
-st.set_page_config(page_title="Ramadan Knights | فرسان رمضان", page_icon="🌙", layout="centered")
+# 1. إعدادات الصفحة الفاخرة
+st.set_page_config(page_title="فرسان رمضان | Ramadan Knights", page_icon="🌙", layout="wide")
 
+# 2. هندسة الواجهة (CSS) لتصميم احترافي
 st.markdown("""
     <style>
-    .main { background-color: #002b1b; color: #fdfdfd; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    html, body, [class*="st-"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
+    .main { background: linear-gradient(180deg, #001a11 0%, #002b1b 100%); color: #fdfdfd; }
     .stButton>button { 
-        background: linear-gradient(135deg, #d4af37 0%, #f9d976 100%); 
-        color: #002b1b !important; border-radius: 15px; font-weight: bold;
+        background: linear-gradient(90deg, #d4af37 0%, #f9d976 100%); 
+        color: #001a11 !important; border-radius: 25px; font-weight: bold; border: none; padding: 10px 25px; width: 100%; font-size: 1.2rem;
     }
-    .reward-card { background-color: #004d33; padding: 15px; border-radius: 10px; border: 1px dashed #d4af37; margin: 10px 0; }
-    h1, h2, h3 { color: #f9d976 !important; text-align: center; }
+    .card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; border: 1px solid #d4af37; margin-bottom: 20px; }
+    h1, h2, h3 { color: #f9d976 !important; }
+    .stTextInput>div>div>input { background-color: #003d26; color: white; border: 1px solid #d4af37; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. إعداد الذكاء الاصطناعي AIzaSyAcsMKzB2rZC-dPjcSzUFq6WxokPsewUMo
+# 3. إعداد المساعد (AIzaSyAcsMKzB2rZC-dPjcSzUFq6WxokPsewUMo)
 genai.configure(api_key="AIzaSyAcsMKzB2rZC-dPjcSzUFq6WxokPsewUMo")
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 3. إدارة البيانات
-if 'history' not in st.session_state:
-    st.session_state.history = []
+# 4. لوحة التحكم الرئيسية
+st.markdown("<h1 style='text-align: center;'>🌙 منصة فرسان رمضان</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 1.2rem;'>رحلتك نحو التطوير الإداري والنمو الذاتي</p>", unsafe_allow_html=True)
 
-# 4. واجهة التطبيق
-st.title("🌙 Ramadan Knights Challenge")
+# 5. المساعد الذكي (بمظهر جديد)
+with st.expander("🤖 اطلب استشارة من المساعد الذكي | AI Mentor"):
+    user_q = st.text_input("كيف يمكنني مساعدتك في خطتك اليوم؟")
+    if st.button("الحصول على إجابة"):
+        with st.spinner('جاري تحليل طلبك...'):
+            res = model.generate_content(f"بصفتك خبير تطوير إداري، أجب باختصار واحترافية باللغة العربية: {user_q}")
+            st.info(res.text)
 
-# المساعد الذكي
-with st.sidebar:
-    st.header("🤖 AI Growth Mentor")
-    ai_q = st.text_input("Ask for advice | اطلب نصيحة")
-    if st.button("Ask AI"):
-        resp = model.generate_content(f"كخبير تطوير إداري، أعط نصيحة قصيرة لـ: {ai_q}")
-        st.info(resp.text)
+# 6. منطقة تسجيل الإنجاز
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("📝 تسجيل إنجاز اليوم")
+name = st.text_input("اسم الفارس (Member Name)")
 
-# 5. تسجيل الإنجاز
-st.header("1️⃣ Record Achievement")
-user_name = st.text_input("Member Name | اسم الفرد")
+c1, c2 = st.columns(2)
+with c1:
+    skill = st.selectbox("اختر المهارة (Skill)", ["هندسة الأوامر AI", "المونتاج", "القراءة السريعة", "أخرى"])
+    if skill == "أخرى": skill = st.text_input("اكتب مهارتك الخاصة")
+with c2:
+    habit = st.selectbox("اختر العادة (Habit)", ["العمل العميق", "الامتنان", "شرب الماء", "أخرى"])
+    if habit == "أخرى": habit = st.text_input("اكتب عادتك الخاصة")
 
-col1, col2 = st.columns(2)
-with col1:
-    sel_skill = st.selectbox("Skill", ["AI Prompting", "Video Editing", "Other"])
-    final_skill = st.text_input("Custom Skill") if sel_skill == "Other" else sel_skill
-with col2:
-    sel_habit = st.selectbox("Habit", ["Deep Work", "Hydration", "Other"])
-    final_habit = st.text_input("Custom Habit") if sel_habit == "Other" else sel_habit
-
-# 6. الحفظ وحساب النقاط
-if st.button("✅ Save & Earn 20 Points!"):
-    if user_name:
-        entry = {"name": user_name, "date": datetime.now().strftime("%Y-%m-%d"), "pts": 20}
-        st.session_state.history.append(entry)
-        st.success(f"Bravo {user_name}! +20 Points")
+if st.button("✅ حفظ الإنجاز وكسب 20 نقطة"):
+    if name:
+        st.success(f"أحسنت يا {name}! تم تسجيل 20 نقطة في رصيدك.")
         st.balloons()
+    else:
+        st.error("يرجى كتابة الاسم أولاً")
+st.markdown("</div>", unsafe_allow_html=True)
 
-# 7. لوحة الصدارة ونظام الحوافز
-st.divider()
-st.header("🏆 Leaderboard & Rewards")
-
-if st.session_state.history:
-    df = pd.DataFrame(st.session_state.history)
-    leaderboard = df.groupby("name")["pts"].sum().sort_values(ascending=False).reset_index()
-    
-    for i, row in leaderboard.iterrows():
-        name = row['name']
-        points = row['pts']
-        st.write(f"🥇 **{name}**: {points} Points")
-        
-        # نظام المكافآت المقترح إدارياً
-        with st.expander(f"🎁 View Rewards for {name}"):
-            if points >= 100:
-                st.markdown("<div class='reward-card'>🌟 <b>الوسام الذهبي:</b> رحلة اختيارية أو هدية قيمة من القائد</div>", unsafe_allow_html=True)
-            elif points >= 60:
-                st.markdown("<div class='reward-card'>🥈 <b>الوسام الفضي:</b> إعفاء من مهمة منزلية لمدة يوم</div>", unsafe_allow_html=True)
-            elif points >= 20:
-                st.markdown("<div class='reward-card'>🥉 <b>وسام الفارس:</b> وجبة مفضلة أو وقت إضافي للهوايات</div>", unsafe_allow_html=True)
-else:
-    st.info("No records yet. Be the first knight!")
-
-st.divider()
-st.caption("صمم بواسطة باحث في التطوير الإداري لتعزيز النمو الذاتي")
+# 7. مؤقت التركيز
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("⏱️ مؤقت التركيز (20 دقيقة)")
+if st.button("🚀 ابدأ جلسة العمل العميق"):
+    ph = st.empty()
+    for t in range(20*60, 0, -1):
+        m, s = divmod(t, 60)
+        ph.metric("الوقت المتبقي", f"{m:02d}:{s:02d}")
+        time.sleep(1)
+    st.success("انتهت الجلسة! أنت الآن فارس حقيقي.")
+st.markdown("</div>", unsafe_allow_html=True)
